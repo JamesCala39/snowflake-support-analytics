@@ -8,7 +8,7 @@
 -- ---------------------------------------------------------------------
 -- 0. Setup
 -- ---------------------------------------------------------------------
-USE ROLE SYSADMIN;
+USE ROLE SYSADMIN; -- Create warehouse and database
 
 CREATE WAREHOUSE IF NOT EXISTS SUPPORT_WH
   WAREHOUSE_SIZE = 'XSMALL'
@@ -94,7 +94,7 @@ SELECT
        WHEN u_region < 0.90 THEN 'APAC'
        ELSE 'LATAM' END                                   AS region,
   DATEADD(day, -u_signup, DATE '2025-11-01')              AS signup_date,
-  -- Fake PII on purpose, so you can practice masking policies later
+  -- Fake PII on purpose for masking policies
   'Contact ' || client_id                                 AS contact_name,
   'support.contact' || client_id || '@client' || client_id || '.example.com' AS contact_email,
   '+1-555-' || LPAD(client_id::STRING, 4, '0')            AS contact_phone
@@ -158,21 +158,21 @@ FROM TABLE(GENERATOR(ROWCOUNT => 150000));
 -- ---------------------------------------------------------------------
 -- 6. Fact table. Everything below is deterministic given the seed table.
 --
---    Built-in "stories" for your analysis later:
+--    Built-in "stories":
 --      * A handful of low-ID clients generate far more tickets (skewed)
 --      * Weekend tickets are slower, so SLA breaches spike on weekends
 --      * Basic tier is slowest, Enterprise fastest
 --      * CSAT drops when SLAs are breached
 --      * Most weekend volume is shifted to Mon/Tue (lower weekend volume)
 --
---    Intentional dirty data (for data quality checks, stretch goal):
+--    Intentional dirty data:
 --      * ~0.2% of resolved tickets have resolved_at BEFORE created_at
 --      * ~0.5% of tickets have no assigned agent
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE TABLE fact_tickets AS
 WITH t0 AS (
   SELECT s.*,
-         1 + FLOOR(500 * POW(u_client, 1.8))::INT        AS client_id,
+         1 + FLOOR(500 * POW(u_client, 1.8))::NUMBER(10,0)       AS client_id,
          DATEADD(day, u_day, DATE '2025-11-01')          AS d0
   FROM tmp_ticket_seed s
 ),
@@ -240,7 +240,7 @@ SELECT
   ticket_id,
   client_id,
   IFF(u_noagent < 0.005, NULL,
-      IFF(priority IN ('P1','P2'), u_agent_hi, u_agent_lo))          AS agent_id,
+      IFF(priority IN ('P1','P2'), u_agent_hi, u_agent_lo))::NUMBER(18,0)          AS agent_id,
   created_at,
   first_response_at,
   resolved_at,
@@ -320,7 +320,7 @@ FROM t6;
 
 
 -- ---------------------------------------------------------------------
--- 7. Sanity checks (run these and eyeball the results)
+-- 7. Sanity checks
 -- ---------------------------------------------------------------------
 
 -- Row counts
@@ -336,7 +336,7 @@ FROM fact_tickets GROUP BY priority ORDER BY priority;
 SELECT status, COUNT(*) AS tickets
 FROM fact_tickets GROUP BY status ORDER BY tickets DESC;
 
--- First-response SLA breach rate by plan tier (Basic should be worst)
+-- First-response SLA breach rate by plan tier
 SELECT c.plan_tier,
        COUNT(*) AS tickets,
        ROUND(100 * AVG(IFF(DATEDIFF('minute', f.created_at, f.first_response_at)
@@ -347,7 +347,7 @@ JOIN dim_sla_policy p ON p.priority  = f.priority
 WHERE f.first_response_at IS NOT NULL
 GROUP BY c.plan_tier ORDER BY response_breach_pct DESC;
 
--- Weekend vs weekday breach rate (weekends should be worse)
+-- Weekend vs weekday breach rate
 SELECT d.is_weekend,
        COUNT(*) AS tickets,
        ROUND(100 * AVG(IFF(DATEDIFF('minute', f.created_at, f.first_response_at)
@@ -358,7 +358,7 @@ JOIN dim_sla_policy p ON p.priority = f.priority
 WHERE f.first_response_at IS NOT NULL
 GROUP BY d.is_weekend;
 
--- Intentional dirty data (your future data quality checks should catch these)
+-- Intentional dirty data
 SELECT COUNT_IF(resolved_at < created_at) AS resolved_before_created,
        COUNT_IF(agent_id IS NULL)         AS missing_agent
 FROM fact_tickets;
