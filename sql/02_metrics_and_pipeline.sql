@@ -1,7 +1,7 @@
 /* =====================================================================
    Client Support Analytics, Step 2: model, metrics, pipeline, security
    Prereq: 01_synthetic_data.sql has been run successfully.
-   Run top to bottom in ONE worksheet. The script switches roles itself.
+   Run all in a worksheet
 
    Sections
      0. Setup + dataset "as of" config
@@ -9,15 +9,8 @@
      2. Metric views (window functions throughout)
      3. Stream + Task pipeline (daily summary table)
      4. Dynamic Table (open tickets by age)
-     5. Role-based access + masking policy   (masking needs Enterprise edition)
+     5. Role-based access
      6. Optional: stage + COPY INTO round trip
-
-   Metric definitions (be ready to explain these in interviews):
-     * SLA clocks are wall-clock time. They do NOT pause while waiting on the customer.
-     * First response time = created_at -> first_response_at, in minutes.
-     * Resolution time     = created_at -> resolved_at, in minutes.
-     * Breach rates only count tickets where the event happened (no response yet = not measured).
-     * Tickets with resolved_at before created_at are excluded (flagged in Step 4 DQ checks).
    ===================================================================== */
 
 -- ---------------------------------------------------------------------
@@ -30,14 +23,13 @@ USE ROLE SYSADMIN;
 USE WAREHOUSE SUPPORT_WH;
 USE SCHEMA SUPPORT_ANALYTICS.CORE;
 
--- The dataset is frozen at this timestamp. In production you'd use CURRENT_TIMESTAMP().
+-- The dataset is frozen at this timestamp. In production use CURRENT_TIMESTAMP().
 CREATE OR REPLACE TABLE dataset_config AS
 SELECT '2026-10-31 23:59:59'::TIMESTAMP_NTZ AS as_of_ts;
 
 
 -- ---------------------------------------------------------------------
--- 1. Star schema: keys are informational in Snowflake (not enforced),
---    but they document the model and BI tools read them.
+-- 1. Star schema:
 -- ---------------------------------------------------------------------
 ALTER TABLE dim_clients    ADD PRIMARY KEY (client_id);
 ALTER TABLE dim_agents     ADD PRIMARY KEY (agent_id);
@@ -403,7 +395,7 @@ GROUP BY age_bucket, bucket_order
 ORDER BY bucket_order;
 
 -- Dynamic tables refresh on a timer and use warehouse credits.
--- Suspend it when you aren't working on the project:
+-- Suspend it when not working on the project:
 -- ALTER DYNAMIC TABLE dt_open_tickets_by_age SUSPEND;
 
 
@@ -426,32 +418,8 @@ GRANT SELECT ON FUTURE VIEWS        IN SCHEMA SUPPORT_ANALYTICS.CORE TO ROLE SUP
 GRANT SELECT ON FUTURE DYNAMIC TABLES IN SCHEMA SUPPORT_ANALYTICS.CORE TO ROLE SUPPORT_ANALYST;
 
 -- Let your own user switch to the analyst role so you can test it
-SET me = CURRENT_USER();
+SET me = '"' || CURRENT_USER() || '"';
 GRANT ROLE SUPPORT_ANALYST TO USER IDENTIFIER($me);
-
--- Masking policies (REQUIRES ENTERPRISE EDITION; skip this block on Standard)
-USE ROLE SYSADMIN;
-
-CREATE OR REPLACE MASKING POLICY mask_contact_email AS (val STRING) RETURNS STRING ->
-  CASE WHEN IS_ROLE_IN_SESSION('SYSADMIN') OR IS_ROLE_IN_SESSION('ACCOUNTADMIN') THEN val
-       ELSE REGEXP_REPLACE(val, '.+@', '*****@') END;
-
-CREATE OR REPLACE MASKING POLICY mask_contact_phone AS (val STRING) RETURNS STRING ->
-  CASE WHEN IS_ROLE_IN_SESSION('SYSADMIN') OR IS_ROLE_IN_SESSION('ACCOUNTADMIN') THEN val
-       ELSE '***-***-' || RIGHT(val, 4) END;
-
-ALTER TABLE dim_clients MODIFY COLUMN contact_email SET MASKING POLICY mask_contact_email;
-ALTER TABLE dim_clients MODIFY COLUMN contact_phone SET MASKING POLICY mask_contact_phone;
-
--- Prove it works: analyst sees masked values, SYSADMIN sees real ones
-USE ROLE SUPPORT_ANALYST;
-USE WAREHOUSE SUPPORT_WH;
-SELECT client_id, client_name, contact_email, contact_phone FROM SUPPORT_ANALYTICS.CORE.dim_clients LIMIT 5;
-SELECT * FROM SUPPORT_ANALYTICS.CORE.v_sla_by_priority ORDER BY priority;   -- analysts can still query metrics
-
-USE ROLE SYSADMIN;
-SELECT client_id, client_name, contact_email, contact_phone FROM dim_clients LIMIT 5;
-
 
 -- ---------------------------------------------------------------------
 -- 6. Optional: stage + COPY INTO round trip
