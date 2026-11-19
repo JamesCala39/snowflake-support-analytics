@@ -1,15 +1,15 @@
 /* =====================================================================
-   Client Support Analytics, Step 4: stretch goals
+   Client Support Analytics, Step 3: stretch goals
    Prereq: Steps 1-2 scripts have run (tables, v_ticket_enriched, v_at_risk_clients,
            dataset_config). Run in ONE worksheet, top to bottom.
 
    Sections
      1. Data quality checks + audit table (run this first)
-     2. Weekly client health report (the "send to an account manager" query)
-     3. AI functions on ticket text (AI_SENTIMENT, AI_CLASSIFY, AI_SUMMARIZE_AGG)
-     4. Findings queries for your README
+     2. Weekly client health report
+     3. Cortex AI on ticket text (sentiment, auto-categorization, client summaries)
+     4. Findings queries for README
 
-   COST NOTE: Section 3 calls AI functions, which bill credits per token.
+   COST NOTE: Section 3 calls Cortex AI functions, which bill credits per token.
    The text here is short and the sample is ~2,000 tickets, so it's cheap, but do NOT
    run these functions over all 150,000 tickets without checking the cost first.
    ===================================================================== */
@@ -31,7 +31,7 @@ CREATE OR REPLACE TABLE dq_audit_log (
   table_name   STRING,
   failed_rows  NUMBER,
   total_rows   NUMBER,
-  failure_pct  NUMBER(8,4) AS (IFF(total_rows = 0, 0, 100 * failed_rows / total_rows)),
+  failure_pct  NUMBER(38,6) AS (IFF(total_rows = 0, 0, 100 * failed_rows / total_rows)),
   status       STRING,          -- PASS / WARN / FAIL
   details      STRING
 );
@@ -140,7 +140,7 @@ SELECT check_name, severity, status, failed_rows, total_rows, failure_pct, detai
 FROM v_dq_latest_run
 ORDER BY IFF(status = 'FAIL', 0, IFF(status = 'WARN', 1, 2)), failed_rows DESC;
 
--- The actual offending rows, so someone can investigate and fix them
+-- The actual offending rows to investigate and fix them
 CREATE OR REPLACE VIEW v_dq_bad_tickets AS
 SELECT ticket_id, 'resolved_before_created' AS issue, created_at, resolved_at
 FROM fact_tickets WHERE resolved_at < created_at
@@ -153,7 +153,7 @@ FROM fact_tickets WHERE agent_id IS NULL;
 
 SELECT issue, COUNT(*) AS tickets FROM v_dq_bad_tickets GROUP BY issue;
 
--- Expected result: resolved_before_created and missing_agent fail/warn (we planted them in Step 1);
+-- Expected result: resolved_before_created and missing_agent fail/warn (planted in Step 1);
 -- everything else passes. Re-run CALL run_dq_checks(); any time and the audit log keeps history.
 
 -- Optional: run the checks every morning (task is created suspended)
@@ -175,8 +175,7 @@ AS
         CSAT below 4.2 (30d)       up to 25 pts   (20 pts per CSAT point below 4.2)
         Ticket volume growth (WoW) up to 20 pts   (0.2 pts per % growth)
         Open tickets older than 7d up to 15 pts   (3 pts per ticket)
-      The weights and the 80/60 cutoffs are judgment calls. Look at the score distribution
-      and calibrate them, then be ready to explain why you chose them.
+      The weights and the 80/60 cutoffs are judgment calls.
    ===================================================================== */
 
 CREATE OR REPLACE VIEW v_client_health_weekly AS
@@ -272,15 +271,14 @@ FROM v_client_health_weekly h;
 
 /* =====================================================================
    3. CORTEX AI ON TICKET TEXT
-      New accounts can't use the legacy SNOWFLAKE.CORTEX.* functions, so this section
-      uses the current AI functions instead:
+    To use AI_SENTIMENT and other functions below on a 
+    trial account, a billing method must be added
         AI_SENTIMENT      returns an object whose overall sentiment is a LABEL:
                           positive / negative / neutral / mixed / unknown
         AI_CLASSIFY       returns {"labels": [...]}; single-label mode returns one label
         AI_SUMMARIZE_AGG  summarizes text across many rows
       AI_SENTIMENT returns a label, not a number. The view below maps labels to a simple
-      score (+1 / 0 / -1) so you can still average and correlate. Treat that score as
-      ordinal, not precise.
+      score (+1 / 0 / -1)
    ===================================================================== */
 
 -- AI functions need the SNOWFLAKE.CORTEX_USER database role (granted to PUBLIC by default)
@@ -446,7 +444,7 @@ SELECT client_name, tickets_summarized, ai_summary FROM client_ai_summary;
 
 
 /* =====================================================================
-   4. FINDINGS QUERIES FOR YOUR README
+   4. FINDINGS QUERIES FOR README
       Turn these results into plain-English insights ("Basic-tier clients breach the
       first-response SLA X times as often as Enterprise on weekends"). Quote the real
       numbers from your own run.
