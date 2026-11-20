@@ -35,19 +35,34 @@ This project answers those questions from raw ticket data, end to end.
 
 ```mermaid
 flowchart LR
-  A\[GENERATOR + UNIFORM<br/>synthetic data] --> B\[(FACT\_TICKETS)]
-  A --> C\[(Dimensions<br/>clients, agents,<br/>SLA policy, date)]
-  B --> D\[v\_ticket\_enriched<br/>joins + SLA flags]
-  C --> D
-  D --> E\[Metric views<br/>SLA, CSAT, reopen,<br/>client volume, at-risk,<br/>client health]
-  B -- stream --> F\[Task: refresh<br/>daily summary]
-  F --> G\[(daily\_ticket\_summary)]
-  B --> H\[Dynamic table<br/>open tickets by age]
-  B --> I\[run\_dq\_checks<br/>procedure]
-  I --> J\[(dq\_audit\_log)]
-  D --> K\[AI functions<br/>sentiment, classify,<br/>summarize]
-  E --> L\[Streamlit dashboard]
-  H --> L
+  gen["Synthetic data generator"]
+  fact[("Fact tickets")]
+  dims[("Dimension tables")]
+  enriched["Enriched ticket view"]
+  metrics["Metric views"]
+  stream["Stream on fact tickets"]
+  task["Task: refresh daily summary"]
+  summary[("Daily summary table")]
+  dyn["Dynamic table: open tickets by age"]
+  dq["Data quality checks"]
+  audit[("Audit log")]
+  ai["AI functions on ticket text"]
+  app["Streamlit dashboard"]
+ 
+  gen --> fact
+  gen --> dims
+  fact --> enriched
+  dims --> enriched
+  enriched --> metrics
+  enriched --> ai
+  fact --> stream
+  stream --> task
+  task --> summary
+  fact --> dyn
+  fact --> dq
+  dq --> audit
+  metrics --> app
+  dyn --> app
 ```
 
 ## Data model
