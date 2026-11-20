@@ -421,6 +421,29 @@ GRANT SELECT ON FUTURE DYNAMIC TABLES IN SCHEMA SUPPORT_ANALYTICS.CORE TO ROLE S
 SET me = '"' || CURRENT_USER() || '"';
 GRANT ROLE SUPPORT_ANALYST TO USER IDENTIFIER($me);
 
+/* Masking policies (REQUIRES ENTERPRISE EDITION)
+USE ROLE SYSADMIN;
+
+CREATE OR REPLACE MASKING POLICY mask_contact_email AS (val STRING) RETURNS STRING ->
+  CASE WHEN IS_ROLE_IN_SESSION('SYSADMIN') OR IS_ROLE_IN_SESSION('ACCOUNTADMIN') THEN val
+       ELSE REGEXP_REPLACE(val, '.+@', '*****@') END;
+
+CREATE OR REPLACE MASKING POLICY mask_contact_phone AS (val STRING) RETURNS STRING ->
+  CASE WHEN IS_ROLE_IN_SESSION('SYSADMIN') OR IS_ROLE_IN_SESSION('ACCOUNTADMIN') THEN val
+       ELSE '***-***-' || RIGHT(val, 4) END;
+
+ALTER TABLE dim_clients MODIFY COLUMN contact_email SET MASKING POLICY mask_contact_email;
+ALTER TABLE dim_clients MODIFY COLUMN contact_phone SET MASKING POLICY mask_contact_phone;
+
+USE ROLE SUPPORT_ANALYST;
+USE WAREHOUSE SUPPORT_WH;
+SELECT client_id, client_name, contact_email, contact_phone FROM SUPPORT_ANALYTICS.CORE.dim_clients LIMIT 5;
+SELECT * FROM SUPPORT_ANALYTICS.CORE.v_sla_by_priority ORDER BY priority; 
+
+USE ROLE SYSADMIN;
+SELECT client_id, client_name, contact_email, contact_phone FROM dim_clients LIMIT 5;
+*/
+
 -- ---------------------------------------------------------------------
 -- 6. Optional: stage + COPY INTO round trip
 --    The data was generated in SQL, so this unloads it to an internal stage
