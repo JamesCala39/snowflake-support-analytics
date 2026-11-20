@@ -114,6 +114,8 @@ Add screenshots to `docs/screenshots/` and link them here. Use the default 90-da
 * `backlog.png`: open tickets by age
 * `clients\_risk.png`: at-risk clients table
 * `dq\_audit.png`: the latest data quality run
+  
+docs/screenshots
 
 Before you take them, check that no screenshot shows your Snowflake account URL, account identifier, or email.
 
