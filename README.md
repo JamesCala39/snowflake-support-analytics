@@ -51,60 +51,22 @@ flowchart LR
 ```
 
 ## Data model
-
+ 
 ```mermaid
 erDiagram
-  DIM\_CLIENTS ||--o{ FACT\_TICKETS : client\_id
-  DIM\_AGENTS ||--o{ FACT\_TICKETS : agent\_id
-  DIM\_SLA\_POLICY ||--o{ FACT\_TICKETS : priority
-  DIM\_DATE ||--o{ FACT\_TICKETS : created\_date\_key
-
-  FACT\_TICKETS {
-    number ticket\_id PK
-    number client\_id FK
-    number agent\_id FK
-    string priority FK
-    number created\_date\_key FK
-    timestamp created\_at
-    timestamp first\_response\_at
-    timestamp resolved\_at
-    string category
-    string channel
-    string status
-    string subject
-    string description
-    number csat\_score
-    boolean is\_reopened
-  }
-  DIM\_CLIENTS {
-    number client\_id PK
-    string client\_name
-    string plan\_tier
-    string industry
-    string region
-    date signup\_date
-    string contact\_email "masked"
-    string contact\_phone "masked"
-  }
-  DIM\_AGENTS {
-    number agent\_id PK
-    string agent\_name
-    string team
-    date hire\_date
-  }
-  DIM\_SLA\_POLICY {
-    string priority PK
-    number first\_response\_target\_min
-    number resolution\_target\_min
-  }
-  DIM\_DATE {
-    number date\_key PK
-    date date\_day
-    boolean is\_weekend
-    date week\_start
-    date month\_start
-  }
+  DimClients ||--o{ FactTickets : "client id"
+  DimAgents ||--o{ FactTickets : "agent id"
+  DimSlaPolicy ||--o{ FactTickets : "priority"
+  DimDate ||--o{ FactTickets : "created date key"
 ```
+ 
+| Diagram entity | Snowflake table | Key | Main columns |
+|---|---|---|---|
+| FactTickets | `FACT_TICKETS` | `ticket_id` | `client_id`, `agent_id`, `priority`, `created_date_key`, `created_at`, `first_response_at`, `resolved_at`, `category`, `channel`, `status`, `subject`, `description`, `csat_score`, `is_reopened` |
+| DimClients | `DIM_CLIENTS` | `client_id` | `client_name`, `plan_tier`, `industry`, `region`, `signup_date`, `contact_email` (masked), `contact_phone` (masked) |
+| DimAgents | `DIM_AGENTS` | `agent_id` | `agent_name`, `team`, `hire_date` |
+| DimSlaPolicy | `DIM_SLA_POLICY` | `priority` | `first_response_target_min`, `resolution_target_min` |
+| DimDate | `DIM_DATE` | `date_key` | `date_day`, `is_weekend`, `week_start`, `month_start` |
 
 ## Metric definitions
 
