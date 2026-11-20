@@ -2,7 +2,7 @@
 
 An end-to-end support analytics project: a star-schema warehouse of synthetic support tickets, SLA and customer health metrics, an automated pipeline, role-based access with PII masking, data quality monitoring, AI text enrichment, and a Streamlit dashboard. It's built to mirror the work of a support analyst who owns client support tooling and reporting.
 
-> \*\*Data note:\*\* All data is synthetic and generated in SQL. No real client data is used. I planted a handful of patterns in the data on purpose (for example, weekend tickets are slower and Basic-tier clients get the slowest responses) so I could check that the metrics and dashboard actually recover them. The findings below show the analysis workflow, not discoveries about a real business.
+> \*\*Data note:\*\* All data is synthetic and generated in SQL. No real client data is use. A handful of patterns in the data are planted on purpose (i.e., slow responses for weekends/Basic-tier clients) so that the metrics and dashboard could check and actually recover them. The findings below show the analysis workflow, not discoveries about a real business.
 
 ## The problem
 
