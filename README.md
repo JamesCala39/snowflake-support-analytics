@@ -121,11 +121,11 @@ Before you take them, check that no screenshot shows your Snowflake account URL,
 
 ```
 sql/
-  01\_synthetic\_data.sql         dimensions, fact table, sanity checks
-  02\_metrics\_and\_pipeline.sql   keys, metric views, stream + task, dynamic table, RBAC + masking, COPY INTO
-  03\_stretch\_goals.sql          data quality, client health report, AI functions, findings queries
+  01_synthetic_data.sql         dimensions, fact table, sanity checks
+  02_metrics_and_pipeline.sql   keys, metric views, stream + task, dynamic table, RBAC + masking, COPY INTO
+  03_stretch_goals.sql          data quality, client health report, AI functions, findings queries
 app/
-  streamlit\_app.py              Streamlit in Snowflake dashboard
+  streamlit_app.py              Streamlit in Snowflake dashboard
 docs/
   screenshots/
       * Screenshots of the Streamlit App
@@ -134,15 +134,15 @@ docs/
 ## How to run it
 
 1. Create a Snowflake free trial account.
-2. Run `sql/01\_synthetic\_data.sql`, then `02`, then `03`, each in its own worksheet, top to bottom.
-3. Create a Streamlit app in `SUPPORT\_ANALYTICS.CORE` and paste in `app/streamlit\_app.py`.
+2. Run `sql/01_synthetic_data.sql`, then `02`, then `03`, each in its own worksheet, top to bottom.
+3. Create a Streamlit app in `SUPPORT_ANALYTICS.CORE` and paste in `app/streamlit_app.py`.
 
 Notes:
 
 * **Masking policies** in script 02 needs Enterprise edition.
 * **AI functions** in script 03 are disabled on trial accounts until a credit card is added. Uses trial credits to run, won't be charged.
 * **Cost control:** the warehouse is XS with a 60-second auto-suspend. Suspend the dynamic table + tasks and close the Streamlit app when not in use.
-* The dataset is frozen at an "as of" date in a `dataset\_config` table so results are reproducible. In production you'd use `CURRENT\_TIMESTAMP()`.
+* The dataset is frozen at an "as of" date in a `dataset_config` table so results are reproducible. In production you'd use `CURRENT_TIMESTAMP()`.
 
 ## Limitations and what I'd do next
 
