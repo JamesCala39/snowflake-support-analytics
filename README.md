@@ -107,12 +107,13 @@ Being explicit about definitions matters more than the SQL. These are the choice
 
 ## Screenshots
 
-Add screenshots to `docs/screenshots/` and link them here. Use the default 90-day filter.
+The screenshots can be found in here: [/docs/screenshots](https://github.com/JamesCala39/snowflake-support-analytics/tree/03123e964ab1295c7d9fe8aaa088c686397aa484/docs/screenshots)
+All screenshots use the default 90-day filter.
 
-* `overview.png`: KPI tiles and daily volume with the 7-day average
-* `sla.png`: breach rate by priority and the weekend versus weekday comparison
-* `backlog.png`: open tickets by age
-* `clients\_risk.png`: at-risk clients table
+* `Overview`: KPI tiles and daily volume with the 7-day average
+* `SLA_performance`: breach rate by priority and the weekend versus weekday comparison
+* `Backlog`: open tickets by age
+* `Clients%Risks`: at-risk clients table
 * `dq\_audit.png`: the latest data quality run
   
 docs/screenshots
