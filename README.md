@@ -121,12 +121,12 @@ Being explicit about definitions matters more than the SQL. These are the choice
 
 > Fill this in from your own run. The queries are in section 4 of `sql/03\_stretch\_goals.sql`. Write each finding as a sentence with a number, and keep the caveat that the data is synthetic.
 
-1. **Tier and weekend effect:** *e.g. "Basic-tier P1 tickets breach the first-response SLA X% of the time on weekends versus Y% on weekdays."* (query 4a)
-2. **SLA breaches and satisfaction:** *e.g. "Tickets that breach an SLA average X CSAT versus Y for tickets that meet it."* (query 4b)
-3. **Where reopens come from:** *e.g. "Category Z has the highest reopen rate at X%."* (query 4c)
-4. **Concentration:** *e.g. "The top 10% of clients generate X% of tickets."* (query 4d)
+1. **Tier and weekend effect:** *e.g. "Basic-tier P1 tickets breach the first-response SLA 35.2% of the time on weekends versus 25.7% on weekdays."* (query 4a)
+2. **SLA breaches and satisfaction:** *e.g. "Tickets that breach an SLA average 3.32 CSAT versus 4.39 for tickets that meet it."* (query 4b)
+3. **Where reopens come from:** *e.g. "Reporting/Export has the highest reopen rate at 6.2%."* (query 4c)
+4. **Concentration:** *e.g. "The top 10% of clients generate 27.7% of tickets."* (query 4d)
 5. **Data quality:** *e.g. "The checks flagged X tickets resolved before creation and Y with no agent."* (`dq\_audit\_log`)
-6. **AI enrichment:** *e.g. "AI\_CLASSIFY matched the known category on X% of a 2,000-ticket sample."* Mention that sentiment and CSAT were generated independently, so they don't correlate, and that this is the kind of assumption worth testing on real data.
+6. **AI enrichment:** *e.g. "AI\_CLASSIFY matched the known category on 87.6% of a 2,000-ticket sample."* Mention that sentiment and CSAT were generated independently, so they don't correlate, and that this is the kind of assumption worth testing on real data.
 
 ## Screenshots
 
@@ -150,21 +150,21 @@ sql/
 app/
   streamlit\_app.py              Streamlit in Snowflake dashboard
 docs/
-  interview\_talking\_points.md   how to talk about this project
   screenshots/
+      * Screenshots of the Streamlit App
 ```
 
 ## How to run it
 
-1. Create a Snowflake account. A free trial works.
-2. Run `sql/01\_synthetic\_data.sql`, then `02`, then `03`, each in a single worksheet, top to bottom.
+1. Create a Snowflake free trial account.
+2. Run `sql/01\_synthetic\_data.sql`, then `02`, then `03`, each in its own worksheet, top to bottom.
 3. Create a Streamlit app in `SUPPORT\_ANALYTICS.CORE` and paste in `app/streamlit\_app.py`.
 
 Notes:
 
-* **Masking policies** in script 02 need Enterprise edition. On Standard, skip that block.
-* **AI functions** in script 03 are disabled on trial accounts until a credit card is added (this doesn't upgrade the trial). They bill credits per token, so the script runs them on a sample of about 2,000 tickets only.
-* **Cost control:** the warehouse is XS with a 60-second auto-suspend. Suspend the dynamic table and keep the tasks suspended when you aren't working on the project.
+* **Masking policies** in script 02 needs Enterprise edition.
+* **AI functions** in script 03 are disabled on trial accounts until a credit card is added. Uses trial credits to run, won't be charged.
+* **Cost control:** the warehouse is XS with a 60-second auto-suspend. Suspend the dynamic table + tasks and close the Streamlit app when not in use.
 * The dataset is frozen at an "as of" date in a `dataset\_config` table so results are reproducible. In production you'd use `CURRENT\_TIMESTAMP()`.
 
 ## Limitations and what I'd do next
