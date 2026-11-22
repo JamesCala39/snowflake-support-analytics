@@ -85,10 +85,8 @@ erDiagram
 
 ## Metric definitions
 
-Being explicit about definitions matters more than the SQL. These are the choices I made:
-
-* **SLA clocks are wall-clock time.** They keep running while a ticket waits on the customer and outside business hours. A real support team often pauses the clock or uses business hours, and that would be a straightforward change to `v\_ticket\_enriched`.
-* **First response time** is `created\_at` to `first\_response\_at`, in minutes. **Resolution time** is `created\_at` to `resolved\_at`.
+* **SLA clocks are wall-clock time.** They keep running while a ticket waits on the customer and outside business hours. A real support team often pauses the clock or uses business hours, and that would be a straightforward change to `v_ticket_enriched`.
+* **First response time** is `created_at` to `first_response_at`, in minutes. **Resolution time** is `created_at` to `resolved_at`.
 * **Breach rates only count tickets where the event happened.** A ticket with no response yet is not counted as breached or as met.
 * **Impossible timelines are excluded** from metrics (resolved before created) and flagged by the data quality checks rather than silently dropped.
 * **CSAT is cohorted by ticket creation month**, not by survey date, and only about 45% of resolved tickets have a score, so response rate is reported next to the average.
@@ -96,14 +94,14 @@ Being explicit about definitions matters more than the SQL. These are the choice
 
 ## Key findings
 
-> Fill this in from your own run. The queries are in section 4 of `sql/03\_stretch\_goals.sql`. Write each finding as a sentence with a number, and keep the caveat that the data is synthetic.
+> \*\*Reminder:\*\* All data is synthetic and these key findings do not represent a real business.
 
-1. **Tier and weekend effect:** *e.g. "Basic-tier P1 tickets breach the first-response SLA 35.2% of the time on weekends versus 25.7% on weekdays."* (query 4a)
-2. **SLA breaches and satisfaction:** *e.g. "Tickets that breach an SLA average 3.32 CSAT versus 4.39 for tickets that meet it."* (query 4b)
-3. **Where reopens come from:** *e.g. "Reporting/Export has the highest reopen rate at 6.2%."* (query 4c)
-4. **Concentration:** *e.g. "The top 10% of clients generate 27.7% of tickets."* (query 4d)
-5. **Data quality:** *e.g. "The checks flagged X tickets resolved before creation and Y with no agent."* (`dq\_audit\_log`)
-6. **AI enrichment:** *e.g. "AI\_CLASSIFY matched the known category on 87.6% of a 2,000-ticket sample."* Mention that sentiment and CSAT were generated independently, so they don't correlate, and that this is the kind of assumption worth testing on real data.
+1. **Tier and weekend effect:**  Basic-tier P2 tickets breach the first-response SLA 39.9% of the time on weekends versus 26.5% on weekdays.
+2. **SLA breaches and satisfaction:** Tickets that breach an SLA average 3.32 CSAT versus tickets that meet SLAs average 4.39 CSAT.
+3. **Where reopens come from:** Reporting/Export has the highest reopen rate at 6.2%.
+4. **Concentration:** The top 10% of clients generate 27.7% of tickets.
+5. **Data quality:** The checks flagged 286 tickets resolved before creation, 749 tickets with no agent & 735 tickets open for more than 30 days.
+6. **AI enrichment:** AI_CLASSIFY matched the known category on 87.6% of a 2,000-ticket sample. **Sentiment and CSAT were generated independently, meaning they do not correlate.*
 
 ## Screenshots
 
@@ -154,3 +152,8 @@ Notes:
 * The health score weights aren't validated against churn or renewal outcomes.
 * With real data I'd add incremental loading from a source system, tests with a tool like dbt, and alerting when data quality checks fail.
 
+## Glossary
+
+* SLA (Service Level Agreement) - agreement to maintain a specific level of quality for services
+* CSAT (Customer Satisfaction Score) - key metric that measures how happy customers are with a service
+* KPI (Key Performance Indiciator) - a quantifiable measure used to evaluate how effectively an organization, team, project, or individual achieves specific goals
