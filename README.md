@@ -106,17 +106,12 @@ erDiagram
 ## Screenshots
 
 The screenshots can be found in here: [/docs/screenshots](https://github.com/JamesCala39/snowflake-support-analytics/tree/03123e964ab1295c7d9fe8aaa088c686397aa484/docs/screenshots)
-All screenshots use the default 90-day filter.
+*All screenshots use the default 90-day filter.
 
 * `Overview`: KPI tiles and daily volume with the 7-day average
 * `SLA_performance`: breach rate by priority and the weekend versus weekday comparison
 * `Backlog`: open tickets by age
 * `Clients%Risks`: at-risk clients table
-* `dq\_audit.png`: the latest data quality run
-  
-docs/screenshots
-
-Before you take them, check that no screenshot shows your Snowflake account URL, account identifier, or email.
 
 ## Repository layout
 
